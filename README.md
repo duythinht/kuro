@@ -2,7 +2,7 @@
 
 Kuro is designed to be the simplest way possible to make http requests. It sends an HTTP request and unmarshals json from the response in just one function call.
 
-```
+```go
 package main
 
 import (
