@@ -50,6 +50,7 @@ type ProductRequest struct {
 }
 
 type ProductResponse struct {
+    kuro.Response
     ID          string
     Title       string
     Description string
