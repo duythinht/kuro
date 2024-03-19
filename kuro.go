@@ -16,64 +16,77 @@ var (
 	ErrClientMalfunction = errors.New("error client malfunction")
 )
 
+// Response is the markup of a return json body return
 type Response struct {
 	Header     http.Header `json:"-"`
 	StatusCode int         `json:"-"`
 }
 
+// SetHeader method for a response
 func (r *Response) SetHeader(header http.Header) {
 	r.Header = header
 }
 
+// SetStatus for a response
 func (r *Response) SetStatus(status int) {
 	r.StatusCode = status
 }
 
+// String default output of Response
 func (r *Response) String() string {
 	return fmt.Sprintf("header: %s, status: %d", r.Header, r.StatusCode)
 }
 
+// ResponseI constraint for a Response
 type ResponseI[T any] interface {
 	*T
 	SetHeader(header http.Header)
 	SetStatus(status int)
 }
 
-type Option func(params *http.Request)
+// Option for a request
+type OptionFunc func(req *http.Request)
 
-func WithHeader(key, value string) Option {
+// WithHeader attach header into the request
+func WithHeader(key, value string) OptionFunc {
 	return func(req *http.Request) {
 		req.Header.Add(key, value)
 	}
 }
 
-func WithCookie(c *http.Cookie) Option {
+// WithCookie attach cookie into the request
+func WithCookie(c *http.Cookie) OptionFunc {
 	return func(req *http.Request) {
 		req.AddCookie(c)
 	}
 }
 
-func Get[ResponseT any, ResponsePT ResponseI[ResponseT]](ctx context.Context, url string, opts ...Option) (ResponsePT, error) {
+// Get request to url with a context
+func Get[ResponseT any, ResponsePT ResponseI[ResponseT]](ctx context.Context, url string, opts ...OptionFunc) (ResponsePT, error) {
 	return do[ResponseT, struct{}, ResponsePT](ctx, http.MethodGet, url, nil, opts...)
 }
 
-func Post[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...Option) (ResponsePT, error) {
+// Post request to url with a context
+func Post[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...OptionFunc) (ResponsePT, error) {
 	return do[ResponseT, RequestT, ResponsePT](ctx, http.MethodPost, url, body, opts...)
 }
 
-func Put[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...Option) (ResponsePT, error) {
+// Put request to url with a context
+func Put[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...OptionFunc) (ResponsePT, error) {
 	return do[ResponseT, RequestT, ResponsePT](ctx, http.MethodPut, url, body, opts...)
 }
 
-func Patch[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...Option) (ResponsePT, error) {
+// Put request to url with a context
+func Patch[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...OptionFunc) (ResponsePT, error) {
 	return do[ResponseT, RequestT, ResponsePT](ctx, http.MethodPatch, url, body, opts...)
 }
 
-func Delete[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...Option) (ResponsePT, error) {
+// Delete request to url with a context
+func Delete[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, url string, body RequestPT, opts ...OptionFunc) (ResponsePT, error) {
 	return do[ResponseT, RequestT, ResponsePT](ctx, http.MethodDelete, url, body, opts...)
 }
 
-func do[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, method string, url string, body RequestPT, opts ...Option) (ResponsePT, error) {
+func do[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT *RequestT](ctx context.Context, method string, url string, body RequestPT, opts ...OptionFunc) (ResponsePT, error) {
 	payload, err := json.Marshal(body)
 
 	if err != nil {
@@ -153,6 +166,7 @@ func do[ResponseT any, RequestT any, ResponsePT ResponseI[ResponseT], RequestPT 
 	}
 }
 
+// Error that response a request
 type Error struct {
 	error
 	Header     http.Header
@@ -160,10 +174,12 @@ type Error struct {
 	Body       []byte
 }
 
+// Error message
 func (e *Error) Error() string {
 	return e.error.Error()
 }
 
+// Unwrap error
 func (e *Error) Unwrap() error {
 	return e.error
 }
