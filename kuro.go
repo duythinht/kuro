@@ -47,6 +47,12 @@ func WithHeader(key, value string) Option {
 	}
 }
 
+func WithCookie(c *http.Cookie) Option {
+	return func(req *http.Request) {
+		req.AddCookie(c)
+	}
+}
+
 func Get[ResponseT any, ResponsePT ResponseI[ResponseT]](ctx context.Context, url string, opts ...Option) (ResponsePT, error) {
 	return do[ResponseT, struct{}, ResponsePT](ctx, http.MethodGet, url, nil, opts...)
 }
