@@ -37,7 +37,7 @@ func main() {
 
 ### With Header
 
-```
+```go
 product, err := kuro.Get[Product](context.Background(), "https://dummyjson.com/products/1", kuro.WithHeader("content-type", "application/json"))
 ```
 
