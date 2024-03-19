@@ -66,3 +66,26 @@ product, err := kuro.Post[ProductResponse](
     kuro.WithHeader("content-type", "application/json"),
 )
 ```
+
+## Handle error
+
+```go
+_, err := kuro.Post[Body](
+    context.Background(),
+    "https://dummyjson.com/products",
+    &Request{
+        //.. data here
+    }, 
+    kuro.WithHeader("content-type", "application/json"),
+)
+
+switch {
+case errors.Is(err, kuro.ErrClientMalfunction):
+    // do with client malfunction
+case errors.Is(err, kuro.Err4xx) || errors.Is(err, kuro.Err5xx):
+    var kuroError *kuro.Error
+    if errors.As(err, &kuroError) {
+        // do with kuroError
+    }
+}
+```
