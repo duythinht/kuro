@@ -2,7 +2,10 @@ package kuro_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/duythinht/kuro"
@@ -56,6 +59,59 @@ func TestGetFail(t *testing.T) {
 			t.Fail()
 		}
 	default:
+		t.Fail()
+	}
+}
+
+func TestPost(t *testing.T) {
+
+	type Response struct {
+		kuro.Response
+		ID      int
+		Message string
+		Method  string
+	}
+
+	type Request struct {
+		Message string
+		Method  string
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		req := &Request{}
+
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			w.WriteHeader(400)
+		}
+
+		json.NewEncoder(w).Encode(&Response{
+			ID:      1,
+			Message: req.Message,
+			Method:  r.Method,
+		})
+	}))
+
+	defer srv.Close()
+
+	message := "hello"
+
+	resp, err := kuro.Post[Response](
+		context.Background(),
+		srv.URL,
+		&Request{
+			Message: message,
+		},
+	)
+
+	if err != nil {
+		t.Fail()
+	}
+
+	if resp.Method != http.MethodPost {
+		t.Fail()
+	}
+
+	if resp.Message != message {
 		t.Fail()
 	}
 }
